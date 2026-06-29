@@ -8,6 +8,7 @@ export interface Restaurant {
   rating: number | null;
   approx_cost: number;
   location: string;
+  Location: string;
   ai_explanation: string;
 }
 

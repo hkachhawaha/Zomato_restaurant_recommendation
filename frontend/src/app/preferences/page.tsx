@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useApp, Preferences } from "@/context/AppContext";
+import { API_BASE_URL } from "@/config";
 
 const FALLBACK_LOCATIONS = [
   "Whitefield", "Indiranagar", "Koramangala", "Jayanagar", "JP Nagar", 
@@ -31,13 +32,13 @@ export default function PreferencesPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const locRes = await fetch("http://127.0.0.1:8000/api/locations");
+        const locRes = await fetch(`${API_BASE_URL}/api/locations`);
         if (locRes.ok) {
           const locs = await locRes.json();
           if (Array.isArray(locs) && locs.length > 0) setLocations(locs);
         }
         
-        const cuisRes = await fetch("http://127.0.0.1:8000/api/cuisines");
+        const cuisRes = await fetch(`${API_BASE_URL}/api/cuisines`);
         if (cuisRes.ok) {
           const cuis = await cuisRes.json();
           if (Array.isArray(cuis) && cuis.length > 0) setAllCuisines(cuis);
@@ -106,7 +107,7 @@ export default function PreferencesPage() {
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/recommend", {
+      const res = await fetch(`${API_BASE_URL}/api/recommend`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)

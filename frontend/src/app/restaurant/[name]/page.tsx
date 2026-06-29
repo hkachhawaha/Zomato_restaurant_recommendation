@@ -3,6 +3,7 @@
 import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useApp, Restaurant } from "@/context/AppContext";
+import { API_BASE_URL } from "@/config";
 
 interface PageProps {
   params: Promise<{ name: string }>;
@@ -29,7 +30,7 @@ export default function RestaurantDetailPage({ params }: PageProps) {
     // 2. Otherwise, fetch from FastAPI backend single-restaurant details endpoint
     async function fetchRestaurant() {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/restaurant?name=${encodeURIComponent(decodedName)}`);
+        const res = await fetch(`${API_BASE_URL}/api/restaurant?name=${encodeURIComponent(decodedName)}`);
         if (res.ok) {
           const data = await res.json();
           setRestaurant(data);
@@ -41,6 +42,7 @@ export default function RestaurantDetailPage({ params }: PageProps) {
             rating: 4.5,
             approx_cost: 1500,
             location: "Koramangala",
+            Location: "Koramangala",
             ai_explanation: `${decodedName} offers a pristine dining experience, showcasing high rating consistency and highly praised service.`
           });
         }
@@ -52,6 +54,7 @@ export default function RestaurantDetailPage({ params }: PageProps) {
           rating: 4.5,
           approx_cost: 1500,
           location: "Koramangala",
+          Location: "Koramangala",
           ai_explanation: `${decodedName} is highly recommended by locals, showcasing high rating consistency and premium chef-curated menus.`
         });
       } finally {

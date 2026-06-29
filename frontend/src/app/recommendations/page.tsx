@@ -52,13 +52,14 @@ export default function RecommendationsPage() {
   }
 
   // 2. Fallback curated data if empty list (e.g. backend turned off or zero matches)
-  const displayRecs = recommendations.length > 0 ? recommendations : [
+  const displayRecs: Restaurant[] = recommendations.length > 0 ? recommendations : [
     {
       name: "Windmills Craftworks",
       cuisine: "Continental, Italian, Craft Beer",
       rating: 4.7,
       approx_cost: 2000,
       location: "Whitefield",
+      Location: "Whitefield",
       ai_explanation: "Windmills Craftworks is a pristine choice. It aligns perfectly with your budget, offers exceptional Continental selections, and is highly praised for its jazz music vibe and library seating."
     },
     {
@@ -67,6 +68,7 @@ export default function RecommendationsPage() {
       rating: 4.4,
       approx_cost: 1000,
       location: "Whitefield",
+      Location: "Whitefield",
       ai_explanation: "Nasi And Mee perfectly serves your craving for Asian flavors. Fits right under your budget limit and is highly rated for dumplings and dim sums."
     },
     {
@@ -75,6 +77,7 @@ export default function RecommendationsPage() {
       rating: 4.6,
       approx_cost: 900,
       location: "Indiranagar",
+      Location: "Indiranagar",
       ai_explanation: "Truffles is an iconic Bangalore burger and dessert spot. Known for high consistency and friendly service within budget."
     },
     {
@@ -83,6 +86,7 @@ export default function RecommendationsPage() {
       rating: 4.7,
       approx_cost: 1500,
       location: "Indiranagar",
+      Location: "Indiranagar",
       ai_explanation: "Toit is one of Bangalore's most famous brewpubs. Exceptional wood-fired pizzas and craft beers, matching high rating preferences."
     }
   ];
