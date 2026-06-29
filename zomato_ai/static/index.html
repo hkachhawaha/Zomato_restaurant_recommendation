@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zomato AI Restaurant Concierge</title>
+    <!-- Outfit Font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="background-radial"></div>
+    
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header glass-panel">
+            <div class="logo-area">
+                <span class="logo-icon">🥘</span>
+                <h1>Zomato <span class="accent-text">AI Concierge</span></h1>
+            </div>
+            <p class="subtitle">Bangalore's premium personal restaurant matchmaker, powered by Gemini 2.5 Flash</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Left Side Form Panel -->
+            <section class="form-section glass-panel">
+                <h2>Preferences</h2>
+                <form id="recommendation-form" autocomplete="off">
+                    
+                    <!-- Neighborhood Search + Dropdown -->
+                    <div class="form-group autocomplete-container" id="location-container">
+                        <label for="location-input">Bangalore Neighborhood</label>
+                        <div class="search-select-wrapper">
+                            <input type="text" id="location-input" placeholder="Search or select neighborhood..." required minlength="2">
+                            <span class="dropdown-arrow" id="location-arrow">▼</span>
+                        </div>
+                        <div class="autocomplete-suggestions" id="location-suggestions"></div>
+                    </div>
+
+                    <!-- Cuisine Select Dropdown -->
+                    <div class="form-group" id="cuisine-container">
+                        <label for="cuisine-select">Cuisine Type (Optional)</label>
+                        <select id="cuisine-select">
+                            <option value="" selected>Any Cuisine</option>
+                        </select>
+                    </div>
+
+                    <!-- Budget Range Inputs -->
+                    <div class="form-group">
+                        <label>Budget Range (For Two People)</label>
+                        <div class="budget-range-grid">
+                            <div class="budget-input-wrapper">
+                                <span class="currency-prefix">₹</span>
+                                <input type="number" id="min-budget-input" min="0" value="200" placeholder="Min" required>
+                            </div>
+                            <div class="budget-range-separator">to</div>
+                            <div class="budget-input-wrapper">
+                                <span class="currency-prefix">₹</span>
+                                <input type="number" id="max-budget-input" min="0" value="1000" placeholder="Max" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Minimum Rating Slider -->
+                    <div class="form-group">
+                        <div class="label-with-value">
+                            <label for="rating-input">Minimum Rating</label>
+                            <span id="rating-value" class="slider-badge">3.5</span>
+                        </div>
+                        <input type="range" id="rating-input" min="0.0" max="5.0" step="0.1" value="3.5">
+                    </div>
+
+                    <!-- Semantic Additional Preferences -->
+                    <div class="form-group">
+                        <label for="additional-input">Additional Vibe & Preferences (Optional)</label>
+                        <textarea id="additional-input" placeholder="e.g. rooftop seating, outdoor, famous for pizzas, family friendly" rows="3"></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" id="submit-button" class="btn-primary">
+                        <span class="btn-text">Match My Vibe</span>
+                        <span class="btn-spinner hidden"></span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Right Side Recommendations Display -->
+            <section class="results-section glass-panel">
+                <div class="results-header">
+                    <h2>Recommendations</h2>
+                    <span id="results-count" class="results-count-badge hidden">8 Matches Found</span>
+                </div>
+
+                <!-- Empty State (Shown initially) -->
+                <div class="state-panel" id="empty-state">
+                    <div class="state-icon">🕯️</div>
+                    <h3>No Recommendations Yet</h3>
+                    <p>Enter your location, select your favorite cuisine, and adjust your budget to search Bangalore's top spots.</p>
+                </div>
+
+                <!-- Loading Skeleton Loader (Shown during fetch) -->
+                <div class="state-panel hidden" id="loading-state">
+                    <div class="skeleton-card">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-meta"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-meta"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                    <div class="skeleton-card">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-meta"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                </div>
+
+                <!-- Results Output Grid -->
+                <div class="results-grid hidden" id="results-grid"></div>
+
+                <!-- Error Panel -->
+                <div class="state-panel hidden" id="error-state">
+                    <div class="state-icon">⚠️</div>
+                    <h3>Something went wrong</h3>
+                    <p id="error-message">Recommendation processing error.</p>
+                    <button class="btn-secondary" id="retry-button">Try Again</button>
+                </div>
+
+                <!-- Footer disclaimer inside panel -->
+                <footer class="panel-footer">
+                    <p class="disclaimer">Powered by AI: Recommended candidate spots are pre-filtered via SQL heuristics before explanations are compiled by Gemini 2.5 Flash. Falls back to database templates during service timeouts.</p>
+                </footer>
+            </section>
+
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
