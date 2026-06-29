@@ -18,12 +18,9 @@ class LLMClient:
         
         if self.api_key and self.api_key.strip():
             try:
-                # Initialize the google-genai Client with generous timeout for Cloud environments
+                # Initialize the google-genai Client with default timeout settings
                 self.client = genai.Client(
-                    api_key=self.api_key,
-                    http_options=types.HttpOptions(
-                        timeout=120.0
-                    )
+                    api_key=self.api_key
                 )
                 self.client_initialized = True
             except Exception as e:
@@ -78,7 +75,7 @@ class LLMClient:
                 
                 # Check response payload
                 if not response.text:
-                    raise APIError("Empty text payload returned from Gemini API.")
+                    raise ValueError("Empty text payload returned from Gemini API.")
                 
                 # Parse JSON array response
                 try:
@@ -92,7 +89,7 @@ class LLMClient:
                     raise ValueError("JSON output did not match a structured list array shape.")
                 except (json.JSONDecodeError, ValueError) as json_err:
                     logger.warning(f"Failed to parse JSON response on attempt {attempt + 1}: {json_err}. Raw: {response.text[:500]}")
-                    raise APIError(f"Invalid JSON format returned: {json_err}")
+                    raise ValueError(f"Invalid JSON format returned: {json_err}")
                     
             except (APIError, Exception) as api_err:
                 err_str = str(api_err).upper()
