@@ -18,12 +18,11 @@ class LLMClient:
         
         if self.api_key and self.api_key.strip():
             try:
-                # Initialize the modern google-genai Client with attempts=1 to disable internal retries and a strict timeout
+                # Initialize the google-genai Client with generous timeout for Cloud environments
                 self.client = genai.Client(
                     api_key=self.api_key,
                     http_options=types.HttpOptions(
-                        timeout=30.0,
-                        retry_options=types.HttpRetryOptions(attempts=1)
+                        timeout=120.0
                     )
                 )
                 self.client_initialized = True
@@ -37,7 +36,8 @@ class LLMClient:
         backoff_factor: float = 2.0
     ) -> List[Dict[str, Any]]:
         """
-        Sends the candidate prompt to Gemini 2.5 Flash, parses JSON results, and executes exponential backoff.
+        Sends the candidate prompt to Gemini, parses JSON results, and executes exponential backoff.
+        Uses gemini-2.0-flash for speed; falls back to heuristics on failure.
         Raises RuntimeError if LLM communication is unconfigured or breaks after retries.
         """
         if not self.client_initialized or not self.client:
@@ -51,22 +51,27 @@ class LLMClient:
             "1. Recommend ALL restaurants from the provided Candidate List that match the user's preferences. Do not arbitrarily exclude or drop any candidates. If the preferred cuisine is 'Any Cuisine' or not specified, the user is requesting a general recommendation; in this case, recommend a broad and diverse set of high-quality options from the list (at least 8-12 restaurants if they fit budget and rating) to provide a rich variety of choices.\n"
             "2. Provide a personalized \"ai_explanation\" for each restaurant. Explain why it matches the user's preferences (such as cuisine if specified, budget, rating, and any additional vibe constraints).\n"
             "3. Keep the tone friendly, helpful, and concise.\n"
-            "4. Return output strictly as a JSON array."
+            "4. Return output strictly as a JSON array of objects with keys: name, cuisine, rating, approx_cost, Location, ai_explanation."
         )
 
-        # Configure response schemas and properties (low temperature, strict JSON enforcement)
+        # Configure response (low temperature, strict JSON enforcement)
         config = types.GenerateContentConfig(
             system_instruction=system_instruction,
             response_mime_type="application/json",
             temperature=0.2
         )
         
+        # Use gemini-2.0-flash for fast responses (no thinking overhead)
+        model_name = "gemini-2.0-flash"
+        
         for attempt in range(retries):
             try:
-                # Query Gemini Developer API asynchronously in a threadpool to prevent blocking the event loop
+                logger.info(f"Sending request to {model_name} (attempt {attempt + 1}/{retries})...")
+                
+                # Query Gemini API in a threadpool to prevent blocking the event loop
                 response = await asyncio.to_thread(
                     self.client.models.generate_content,
-                    model="gemini-2.5-flash",
+                    model=model_name,
                     contents=prompt,
                     config=config
                 )
@@ -79,12 +84,14 @@ class LLMClient:
                 try:
                     data = json.loads(response.text)
                     if isinstance(data, list):
+                        logger.info(f"Successfully received {len(data)} recommendations from {model_name}.")
                         return data
                     if isinstance(data, dict) and "recommendations" in data:
+                        logger.info(f"Successfully received {len(data['recommendations'])} recommendations from {model_name}.")
                         return data["recommendations"]
                     raise ValueError("JSON output did not match a structured list array shape.")
                 except (json.JSONDecodeError, ValueError) as json_err:
-                    logger.warning(f"Failed to parse JSON response on attempt {attempt + 1}: {json_err}. Raw: {response.text}")
+                    logger.warning(f"Failed to parse JSON response on attempt {attempt + 1}: {json_err}. Raw: {response.text[:500]}")
                     raise APIError(f"Invalid JSON format returned: {json_err}")
                     
             except (APIError, Exception) as api_err:
@@ -95,14 +102,16 @@ class LLMClient:
                     "QUOTA" in err_str or
                     "503" in err_str or
                     "UNAVAILABLE" in err_str or
-                    "TEMPORARY" in err_str
+                    "PERMISSION_DENIED" in err_str or
+                    "INVALID_API_KEY" in err_str or
+                    "API_KEY_INVALID" in err_str
                 )
                 
                 logger.warning(f"Gemini API request failed on attempt {attempt + 1}/{retries}: {api_err}")
                 
                 if is_fail_fast_error:
-                    logger.warning("Gemini API rate limit, quota, or 503 unavailable error. Failing fast to trigger heuristic fallback.")
-                    raise RuntimeError(f"Gemini API Quota/Service Unavailable: {api_err}")
+                    logger.warning("Gemini API non-retryable error detected. Failing fast to trigger heuristic fallback.")
+                    raise RuntimeError(f"Gemini API error: {api_err}")
                 
                 if attempt == retries - 1:
                     # Terminal retry attempt failed, propagate error to fallback handler
@@ -114,3 +123,4 @@ class LLMClient:
                 await asyncio.sleep(wait_time)
                 
         raise RuntimeError("LLM request failed after execution pipeline retries.")
+
