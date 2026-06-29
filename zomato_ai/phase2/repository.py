@@ -100,6 +100,11 @@ class RestaurantRepository:
             rows = cursor.fetchall()
             # Convert list of sqlite3.Row to list of standard dicts
             return [dict(row) for row in rows]
+        except sqlite3.OperationalError as e:
+            # Handle missing table or schema issues gracefully
+            import logging
+            logging.getLogger(__name__).error(f"Database query failed: {e}. Verify zomato_restaurants.db exists and contains the 'restaurants' table.")
+            return []
         finally:
             conn.close()
 

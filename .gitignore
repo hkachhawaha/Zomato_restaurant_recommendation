@@ -28,8 +28,10 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Database (large file)
-*.db
+# Database temp files (keep main .db tracked for deployment)
+*.db-journal
+*.db-wal
+*.db-shm
 
 # Pytest
 .pytest_cache/
