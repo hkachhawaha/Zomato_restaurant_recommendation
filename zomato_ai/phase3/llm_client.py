@@ -1,5 +1,4 @@
 import json
-import time
 import asyncio
 import logging
 from typing import List, Dict, Any
@@ -62,7 +61,7 @@ class LLMClient:
         model_candidates = [
             "gemini-2.0-flash",
             "gemini-2.0-flash-lite",
-            "gemini-1.5-flash-8b",
+            "gemini-1.5-flash",
         ]
         last_error: Exception | None = None
 
@@ -99,7 +98,9 @@ class LLMClient:
                     is_quota_error = (
                         "RESOURCE_EXHAUSTED" in err_str or
                         "429" in err_str or
-                        "QUOTA" in err_str
+                        "QUOTA" in err_str or
+                        "NOT_FOUND" in err_str or
+                        "404" in err_str
                     )
                     is_fatal_error = (
                         "503" in err_str or
