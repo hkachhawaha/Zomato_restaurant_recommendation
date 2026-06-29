@@ -1,6 +1,6 @@
 [tool.vercel]
-entrypoint = "main:app"
+entrypoint = "app:app"
 
 [tool.fastapi]
-entrypoint = "main:app"
+entrypoint = "app:app"
 
