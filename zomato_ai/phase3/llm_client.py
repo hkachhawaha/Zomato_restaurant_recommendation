@@ -22,7 +22,7 @@ class LLMClient:
                 self.client = genai.Client(
                     api_key=self.api_key,
                     http_options=types.HttpOptions(
-                        timeout=2.0,
+                        timeout=30.0,
                         retry_options=types.HttpRetryOptions(attempts=1)
                     )
                 )
@@ -33,8 +33,8 @@ class LLMClient:
     async def get_recommendations_with_reasoning(
         self, 
         prompt: str,
-        retries: int = 3,
-        backoff_factor: float = 1.5
+        retries: int = 2,
+        backoff_factor: float = 2.0
     ) -> List[Dict[str, Any]]:
         """
         Sends the candidate prompt to Gemini 2.5 Flash, parses JSON results, and executes exponential backoff.
