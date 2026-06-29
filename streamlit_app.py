@@ -162,12 +162,12 @@ if submit_clicked:
     st.subheader(f"✨ Match Curations in {location}")
     
     with st.spinner("Scoring and filtering candidate restaurants..."):
-        candidates = repo.get_candidate_restaurants(
+        candidates = repo.query_restaurants(
             location=location,
-            min_budget=min_budget,
-            max_budget=max_budget,
-            cuisine=selected_cuisine,
-            min_rating=min_rating
+            min_rating=min_rating,
+            min_cost=min_budget,
+            max_cost=max_budget,
+            cuisine=selected_cuisine
         )
         
         # Heuristic scoring and deduplication
@@ -221,22 +221,37 @@ if submit_clicked:
                     recommendations = generate_fallback_response(ranked_candidates, req)
                     
         # Render Results
-        st.write(f"Displaying **{len(recommendations)}** top recommendations:")
-        for idx, rec in enumerate(recommendations, 1):
-            rating_display = f"⭐ {rec.rating:.1f}" if rec.rating is not None else "⭐ N/A"
-            cost_display = f"₹{rec.approx_cost} for two"
+        # Normalize: recommendations can be Pydantic models or raw dicts from LLM
+        normalized = []
+        for rec in recommendations:
+            if hasattr(rec, "model_dump"):
+                normalized.append(rec.model_dump())
+            elif isinstance(rec, dict):
+                normalized.append(rec)
+            else:
+                normalized.append(dict(rec))
+        
+        st.write(f"Displaying **{len(normalized)}** top recommendations:")
+        for idx, rec in enumerate(normalized, 1):
+            rating_val = rec.get("rating")
+            rating_display = f"⭐ {rating_val:.1f}" if rating_val is not None else "⭐ N/A"
+            cost_display = f"₹{rec.get('approx_cost', 'N/A')} for two"
+            rec_name = rec.get("name", "Unknown")
+            rec_location = rec.get("Location", rec.get("location", ""))
+            rec_cuisine = rec.get("cuisine", rec.get("cuisines", ""))
+            rec_explanation = rec.get("ai_explanation", "")
             
             st.markdown(f"""
             <div class="restaurant-card">
                 <div class="card-header">
-                    <span class="restaurant-name">{idx}. {rec.name}</span>
+                    <span class="restaurant-name">{idx}. {rec_name}</span>
                     <span class="rating-badge">{rating_display}</span>
                 </div>
                 <div class="meta-row">
-                    📍 {rec.Location} &nbsp;•&nbsp; 🍴 {rec.cuisine} &nbsp;•&nbsp; 💰 {cost_display}
+                    📍 {rec_location} &nbsp;•&nbsp; 🍴 {rec_cuisine} &nbsp;•&nbsp; 💰 {cost_display}
                 </div>
                 <div class="explanation-bubble">
-                    "{rec.ai_explanation}"
+                    "{rec_explanation}"
                 </div>
             </div>
             """, unsafe_allow_html=True)
