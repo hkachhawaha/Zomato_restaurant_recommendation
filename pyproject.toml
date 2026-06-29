@@ -1,0 +1,2 @@
+[tool.vercel]
+entrypoint = "zomato_ai/phase2/api.py"
